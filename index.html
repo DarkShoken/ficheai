@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FicheAI — Fiches produit en 10 secondes</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --surface: #17171a;
+    --surface2: #1e1e23;
+    --border: rgba(255,255,255,0.07);
+    --accent: #f0c040;
+    --accent2: #e07b3a;
+    --text: #f0ede8;
+    --muted: #888;
+    --success: #4caf80;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grain + glow */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 10%, rgba(240,192,64,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 80% 80%, rgba(224,123,58,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* HEADER */
+  header {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 22px 48px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--accent); }
+
+  .badge-free {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    background: rgba(240,192,64,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(240,192,64,0.25);
+    border-radius: 20px;
+    padding: 4px 12px;
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+  }
+  nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.88rem;
+    transition: color 0.2s;
+  }
+  nav a:hover { color: var(--text); }
+
+  .btn-cta-sm {
+    background: var(--accent);
+    color: #0d0d0f;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+  .btn-cta-sm:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 80px 24px 60px;
+  }
+
+  .hero-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.1s forwards;
+  }
+
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 22px;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.25s forwards;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero p {
+    font-size: 1.05rem;
+    color: var(--muted);
+    max-width: 500px;
+    margin: 0 auto 40px;
+    line-height: 1.7;
+    font-weight: 300;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.4s forwards;
+  }
+
+  /* PRICING PILLS */
+  .pricing-pills {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 56px;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.5s forwards;
+  }
+
+  .pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    padding: 8px 18px;
+    font-size: 0.82rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .pill .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--success);
+  }
+
+  /* MAIN TOOL */
+  .tool-wrapper {
+    position: relative;
+    z-index: 10;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px 100px;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.55s forwards;
+  }
+
+  .tool-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.4);
+  }
+
+  /* Usage counter */
+  .usage-bar {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .usage-bar strong { color: var(--text); }
+  .progress-track {
+    flex: 1;
+    max-width: 160px;
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    margin: 0 16px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.5s;
+  }
+
+  /* Form */
+  .form-area {
+    padding: 36px 36px 28px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .field-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  input, select, textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 13px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.93rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    width: 100%;
+    resize: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: rgba(240,192,64,0.4);
+    box-shadow: 0 0 0 3px rgba(240,192,64,0.06);
+  }
+  select { appearance: none; cursor: pointer; }
+  input::placeholder, textarea::placeholder { color: #444; }
+
+  .tags-input-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    min-height: 48px;
+    align-items: center;
+    cursor: text;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .tags-input-wrap:focus-within {
+    border-color: rgba(240,192,64,0.4);
+    box-shadow: 0 0 0 3px rgba(240,192,64,0.06);
+  }
+  .tag {
+    background: rgba(240,192,64,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(240,192,64,0.2);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: default;
+  }
+  .tag button {
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    padding: 0;
+    font-size: 1rem;
+    line-height: 1;
+    opacity: 0.6;
+  }
+  .tag button:hover { opacity: 1; }
+  .tags-input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 0.9rem;
+    min-width: 120px;
+    flex: 1;
+    padding: 2px 4px;
+  }
+
+  /* Action row */
+  .action-row {
+    padding: 0 36px 36px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .btn-generate {
+    flex: 1;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #0d0d0f;
+    border: none;
+    border-radius: 12px;
+    padding: 16px 28px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: opacity 0.2s, transform 0.15s;
+    letter-spacing: 0.2px;
+  }
+  .btn-generate:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+  .btn-generate:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .btn-reset {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 12px;
+    padding: 16px 18px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .btn-reset:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+
+  /* RESULT */
+  .result-area {
+    margin: 0 36px 36px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    display: none;
+  }
+  .result-area.visible { display: block; animation: fadeUp 0.4s forwards; }
+
+  .result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .result-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--success);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .result-title::before {
+    content: '';
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--success);
+  }
+
+  .result-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn-copy, .btn-download {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 6px 14px;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .btn-copy:hover, .btn-download:hover {
+    color: var(--text);
+    border-color: rgba(255,255,255,0.15);
+  }
+  .btn-copy.copied { color: var(--success); border-color: rgba(76,175,128,0.3); }
+
+  .result-body {
+    padding: 24px;
+    font-size: 0.93rem;
+    line-height: 1.75;
+    color: #ccc;
+    white-space: pre-wrap;
+    min-height: 80px;
+  }
+
+  /* Loading */
+  .loading-dots {
+    display: none;
+    align-items: center;
+    gap: 5px;
+  }
+  .loading-dots.active { display: flex; }
+  .loading-dots span {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #0d0d0f;
+    animation: bounce 1s infinite;
+  }
+  .loading-dots span:nth-child(2) { animation-delay: 0.15s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+  /* PAYWALL */
+  .paywall-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10,10,12,0.85);
+    backdrop-filter: blur(6px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .paywall-overlay.active { display: flex; animation: fadeIn 0.3s forwards; }
+
+  .paywall-card {
+    background: var(--surface);
+    border: 1px solid rgba(240,192,64,0.2);
+    border-radius: 24px;
+    padding: 48px 44px;
+    max-width: 440px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 60px 120px rgba(0,0,0,0.5), 0 0 0 1px rgba(240,192,64,0.08);
+  }
+
+  .paywall-icon {
+    font-size: 2.5rem;
+    margin-bottom: 16px;
+  }
+
+  .paywall-card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    margin-bottom: 12px;
+  }
+  .paywall-card p {
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+
+  .plan-option {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    text-align: left;
+  }
+  .plan-option:hover, .plan-option.selected {
+    border-color: rgba(240,192,64,0.35);
+    background: rgba(240,192,64,0.04);
+  }
+  .plan-option.recommended { position: relative; }
+  .plan-badge {
+    position: absolute;
+    top: -10px; left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #0d0d0f;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  .plan-label { font-weight: 600; font-size: 0.9rem; }
+  .plan-desc { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+  .plan-price { font-weight: 700; font-size: 1.1rem; }
+  .plan-price small { font-size: 0.7rem; font-weight: 400; color: var(--muted); }
+
+  .btn-subscribe {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #0d0d0f;
+    border: none;
+    border-radius: 12px;
+    padding: 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.2s;
+  }
+  .btn-subscribe:hover { opacity: 0.88; }
+
+  .paywall-dismiss {
+    margin-top: 16px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    cursor: pointer;
+    background: none;
+    border: none;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .paywall-dismiss:hover { color: var(--text); }
+
+  /* SOCIAL PROOF */
+  .social-proof {
+    position: relative;
+    z-index: 10;
+    max-width: 860px;
+    margin: 0 auto 80px;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.8s forwards;
+  }
+
+  .testimonial {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+
+  .stars { color: var(--accent); font-size: 0.8rem; margin-bottom: 12px; letter-spacing: 2px; }
+  .testimonial p { font-size: 0.85rem; line-height: 1.6; color: #bbb; margin-bottom: 16px; }
+  .reviewer { font-size: 0.78rem; color: var(--muted); font-weight: 500; }
+  .reviewer strong { color: var(--text); display: block; }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 32px 24px;
+    border-top: 1px solid var(--border);
+    font-size: 0.78rem;
+    color: #444;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes bounce {
+    0%, 80%, 100% { transform: scale(0.5); opacity: 0.5; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  @media (max-width: 640px) {
+    header { padding: 16px 20px; }
+    nav { display: none; }
+    .form-area { grid-template-columns: 1fr; padding: 24px 20px 16px; }
+    .action-row { padding: 0 20px 24px; }
+    .result-area { margin: 0 20px 24px; }
+    .social-proof { grid-template-columns: 1fr; }
+    .hero { padding: 50px 20px 40px; }
+    .paywall-card { padding: 36px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Fiche<span>AI</span></div>
+  <nav>
+    <a href="#">Tarifs</a>
+    <a href="#">Exemples</a>
+    <a href="#">API</a>
+    <button class="btn-cta-sm">Se connecter</button>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-eyebrow">✦ Propulsé par l'IA</div>
+  <h1>Vos fiches produit,<br><em>rédigées en 10 secondes</em></h1>
+  <p>Collez vos infos, recevez une fiche produit professionnelle optimisée SEO. Parfait pour Shopify, Etsy, Leboncoin, Amazon.</p>
+  <div class="pricing-pills">
+    <div class="pill"><span class="dot"></span> 3 fiches gratuites</div>
+    <div class="pill"><span class="dot"></span> Aucune carte requise</div>
+    <div class="pill"><span class="dot"></span> SEO inclus</div>
+  </div>
+</section>
+
+<div class="tool-wrapper">
+  <div class="tool-card">
+
+    <div class="usage-bar">
+      <span>Fiches utilisées : <strong id="usage-count">0 / 3</strong></span>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      <span>Quota gratuit</span>
+    </div>
+
+    <div class="form-area">
+      <div class="field-group">
+        <label>Nom du produit *</label>
+        <input type="text" id="product-name" placeholder="ex: Sac à dos vintage 30L brun" />
+      </div>
+
+      <div class="field-group">
+        <label>Catégorie</label>
+        <select id="category">
+          <option value="">Sélectionner…</option>
+          <option>Mode & Accessoires</option>
+          <option>Maison & Décoration</option>
+          <option>Électronique</option>
+          <option>Sport & Outdoor</option>
+          <option>Beauté & Santé</option>
+          <option>Alimentation</option>
+          <option>Jouets & Enfants</option>
+          <option>Art & Artisanat</option>
+          <option>Autre</option>
+        </select>
+      </div>
+
+      <div class="field-group full">
+        <label>Caractéristiques principales</label>
+        <div class="tags-input-wrap" id="tags-wrap">
+          <input class="tags-input" id="tags-input" placeholder="Tapez une caractéristique + Entrée…" />
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Prix de vente</label>
+        <input type="text" id="price" placeholder="ex: 49€" />
+      </div>
+
+      <div class="field-group">
+        <label>Ton souhaité</label>
+        <select id="tone">
+          <option value="professionnel">Professionnel</option>
+          <option value="chaleureux">Chaleureux & humain</option>
+          <option value="luxe">Luxe & premium</option>
+          <option value="minimaliste">Minimaliste</option>
+          <option value="dynamique">Dynamique & jeune</option>
+        </select>
+      </div>
+
+      <div class="field-group full">
+        <label>Notes supplémentaires (optionnel)</label>
+        <textarea id="notes" rows="2" placeholder="Histoire du produit, matériaux, utilisation, cible..."></textarea>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <button class="btn-reset" id="btn-reset" title="Réinitialiser">↺</button>
+      <button class="btn-generate" id="btn-generate">
+        <span class="loading-dots" id="loading"><span></span><span></span><span></span></span>
+        <span id="btn-text">✦ Générer la fiche produit</span>
+      </button>
+    </div>
+
+    <div class="result-area" id="result-area">
+      <div class="result-header">
+        <div class="result-title">Fiche générée</div>
+        <div class="result-actions">
+          <button class="btn-copy" id="btn-copy">Copier</button>
+          <button class="btn-download" id="btn-download">⬇ Télécharger</button>
+        </div>
+      </div>
+      <div class="result-body" id="result-body"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="social-proof">
+  <div class="testimonial">
+    <div class="stars">★★★★★</div>
+    <p>« Je vendais sur Etsy depuis 2 ans avec des fiches basiques. Depuis FicheAI, mes ventes ont augmenté de 40% en un mois. »</p>
+    <div class="reviewer"><strong>Sophie M.</strong> Créatrice bijoux, Lyon</div>
+  </div>
+  <div class="testimonial">
+    <div class="stars">★★★★★</div>
+    <p>« J'ai 200 références sur ma boutique. Ce qui me prenait 2h par jour me prend maintenant 15 minutes. Indispensable. »</p>
+    <div class="reviewer"><strong>Karim B.</strong> E-commerçant, Paris</div>
+  </div>
+  <div class="testimonial">
+    <div class="stars">★★★★☆</div>
+    <p>« Le SEO généré est vraiment bon. Mes fiches remontent en première page Google en moins d'une semaine. »</p>
+    <div class="reviewer"><strong>Élise T.</strong> Boutique vintage, Bordeaux</div>
+  </div>
+</div>
+
+<footer>
+  © 2025 FicheAI · <a href="#" style="color:inherit">CGV</a> · <a href="#" style="color:inherit">Confidentialité</a> · Fait avec ♥ en France
+</footer>
+
+<!-- PAYWALL -->
+<div class="paywall-overlay" id="paywall">
+  <div class="paywall-card">
+    <div class="paywall-icon">🔒</div>
+    <h2>Quota gratuit atteint</h2>
+    <p>Vous avez utilisé vos 3 fiches gratuites. Choisissez un abonnement pour continuer à générer des fiches illimitées.</p>
+
+    <div class="plan-option selected" data-plan="starter">
+      <div>
+        <div class="plan-label">Starter</div>
+        <div class="plan-desc">30 fiches / mois · 1 boutique</div>
+      </div>
+      <div class="plan-price">7€ <small>/ mois</small></div>
+    </div>
+
+    <div class="plan-option recommended" data-plan="pro">
+      <div class="plan-badge">⭐ Le plus populaire</div>
+      <div>
+        <div class="plan-label">Pro</div>
+        <div class="plan-desc">Illimité · 5 boutiques · export CSV</div>
+      </div>
+      <div class="plan-price">19€ <small>/ mois</small></div>
+    </div>
+
+    <div class="plan-option" data-plan="annuel">
+      <div>
+        <div class="plan-label">Annuel Pro</div>
+        <div class="plan-desc">Illimité · Économisez 40%</div>
+      </div>
+      <div class="plan-price">9€ <small>/ mois</small></div>
+    </div>
+
+    <button class="btn-subscribe" id="btn-subscribe">Commencer maintenant →</button>
+    <button class="btn-paywall-dismiss" onclick="document.getElementById('paywall').classList.remove('active')" style="margin-top:16px;font-size:0.8rem;color:var(--muted);cursor:pointer;background:none;border:none;text-decoration:underline;text-underline-offset:3px;display:block;width:100%;text-align:center;">Continuer sans abonnement</button>
+  </div>
+</div>
+
+<script>
+// Tags system
+const tagsInput = document.getElementById('tags-input');
+const tagsWrap = document.getElementById('tags-wrap');
+let tags = [];
+
+tagsInput.addEventListener('keydown', (e) => {
+  if ((e.key === 'Enter' || e.key === ',') && tagsInput.value.trim()) {
+    e.preventDefault();
+    addTag(tagsInput.value.trim().replace(/,$/, ''));
+    tagsInput.value = '';
+  }
+  if (e.key === 'Backspace' && !tagsInput.value && tags.length) {
+    removeTag(tags.length - 1);
+  }
+});
+
+tagsWrap.addEventListener('click', () => tagsInput.focus());
+
+function addTag(text) {
+  if (tags.includes(text)) return;
+  tags.push(text);
+  renderTags();
+}
+
+function removeTag(i) {
+  tags.splice(i, 1);
+  renderTags();
+}
+
+function renderTags() {
+  tagsWrap.querySelectorAll('.tag').forEach(t => t.remove());
+  tags.forEach((tag, i) => {
+    const el = document.createElement('div');
+    el.className = 'tag';
+    el.innerHTML = `${tag} <button onclick="removeTag(${i})">×</button>`;
+    tagsWrap.insertBefore(el, tagsInput);
+  });
+}
+
+// Usage counter (simulated at 2/3)
+let usageCount = 0;
+const maxUsage = 3;
+
+function updateUsage() {
+  document.getElementById('usage-count').textContent = `${usageCount} / ${maxUsage}`;
+  document.getElementById('progress-fill').style.width = `${(usageCount / maxUsage) * 100}%`;
+}
+updateUsage();
+
+// Plan selection
+document.querySelectorAll('.plan-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    document.querySelectorAll('.plan-option').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected');
+  });
+});
+
+// Reset
+document.getElementById('btn-reset').addEventListener('click', () => {
+  document.getElementById('product-name').value = '';
+  document.getElementById('category').value = '';
+  document.getElementById('price').value = '';
+  document.getElementById('notes').value = '';
+  tags = [];
+  renderTags();
+  document.getElementById('result-area').classList.remove('visible');
+});
+
+// Generate
+document.getElementById('btn-generate').addEventListener('click', async () => {
+  const name = document.getElementById('product-name').value.trim();
+  if (!name) {
+    document.getElementById('product-name').focus();
+    return;
+  }
+
+  if (usageCount >= maxUsage) {
+    document.getElementById('paywall').classList.add('active');
+    return;
+  }
+
+  const btn = document.getElementById('btn-generate');
+  const loading = document.getElementById('loading');
+  const btnText = document.getElementById('btn-text');
+
+  btn.disabled = true;
+  loading.classList.add('active');
+  btnText.style.display = 'none';
+
+  const category = document.getElementById('category').value;
+  const price = document.getElementById('price').value;
+  const tone = document.getElementById('tone').value;
+  const notes = document.getElementById('notes').value;
+  const tagsStr = tags.join(', ');
+
+  const prompt = `Tu es un expert en copywriting e-commerce francophone. Rédige une fiche produit professionnelle et optimisée SEO pour ce produit :
+
+Nom : ${name}
+${category ? `Catégorie : ${category}` : ''}
+${tagsStr ? `Caractéristiques : ${tagsStr}` : ''}
+${price ? `Prix : ${price}` : ''}
+${notes ? `Notes : ${notes}` : ''}
+Ton : ${tone}
+
+Structure ta réponse ainsi :
+**Titre accrocheur** (1 ligne, inclut le mot-clé principal)
+
+**Description courte** (2-3 phrases percutantes pour capter l'attention)
+
+**Points forts** (4-5 bullet points avec émoji, bénéfices orientés client)
+
+**Description détaillée** (2 paragraphes riches en mots-clés SEO naturels)
+
+**Mots-clés SEO** (liste de 6-8 tags séparés par des virgules)
+
+Réponds directement avec la fiche, sans introduction.`;
+
+  try {
+    const response = await fetch('/.netlify/functions/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    });
+
+    const data = await response.json();
+    const text = data.text || '';
+
+    // Format simple markdown
+    const formatted = text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/^- /gm, '• ');
+
+    document.getElementById('result-body').innerHTML = formatted;
+    document.getElementById('result-area').classList.add('visible');
+
+    usageCount++;
+    updateUsage();
+
+    if (usageCount >= maxUsage) {
+      setTimeout(() => document.getElementById('paywall').classList.add('active'), 1800);
+    }
+
+  } catch (err) {
+    document.getElementById('result-body').textContent = '⚠️ Erreur lors de la génération. Vérifiez votre connexion ou votre clé API.';
+    document.getElementById('result-area').classList.add('visible');
+  }
+
+  btn.disabled = false;
+  loading.classList.remove('active');
+  btnText.style.display = '';
+});
+
+// Copy
+document.getElementById('btn-copy').addEventListener('click', () => {
+  const text = document.getElementById('result-body').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = '✓ Copié !';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copier'; btn.classList.remove('copied'); }, 2000);
+  });
+});
+
+// Download
+document.getElementById('btn-download').addEventListener('click', () => {
+  const text = document.getElementById('result-body').innerText;
+  const name = document.getElementById('product-name').value || 'fiche-produit';
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${name.toLowerCase().replace(/\s+/g, '-')}.txt`;
+  a.click();
+});
+
+// Subscribe button (mock)
+document.getElementById('btn-subscribe').addEventListener('click', () => {
+  const plan = document.querySelector('.plan-option.selected')?.dataset.plan;
+  const links = { starter: 'https://buy.stripe.com/test_14AeV6edGeRX7J83MUfEk00', pro: 'https://buy.stripe.com/test_fZufZa0mQ39f3sSabifEk01', annuel: 'https://buy.stripe.com/test_fZufZa0mQ39f3sSabifEk01' }; window.location.href = links[plan] || links.pro;
+});
+</script>
+</body>
+</html>
