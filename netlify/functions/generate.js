@@ -14,18 +14,25 @@ function httpsPost(options, body) {
 }
 
 exports.handler = async (event) => {
+  console.log('Function called, method:', event.httpMethod);
+
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
   try {
-    const { prompt } = JSON.parse(event.body);
+    const parsed = JSON.parse(event.body);
+    console.log('Prompt received, length:', parsed.prompt?.length);
+    console.log('API key present:', !!process.env.ANTHROPIC_API_KEY);
+    console.log('API key starts with:', process.env.ANTHROPIC_API_KEY?.substring(0, 10));
 
     const payload = JSON.stringify({
-      model: 'claude-opus-4-5',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 1000,
-      messages: [{ role: 'user', content: prompt }]
+      messages: [{ role: 'user', content: parsed.prompt }]
     });
+
+    console.log('Calling Anthropic API...');
 
     const result = await httpsPost({
       hostname: 'api.anthropic.com',
@@ -39,8 +46,12 @@ exports.handler = async (event) => {
       }
     }, payload);
 
+    console.log('API status:', result.status);
+    console.log('API response preview:', result.body.substring(0, 200));
+
     const data = JSON.parse(result.body);
     const text = (data.content || []).map(b => b.text || '').join('');
+    console.log('Text length:', text.length);
 
     return {
       statusCode: 200,
@@ -51,6 +62,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({ text })
     };
   } catch (err) {
+    console.log('ERROR:', err.message);
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json' },
