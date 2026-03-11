@@ -1,221 +1,684 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FicheAI — Bientôt disponible</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FicheAI — Générateur de fiches produit</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: #0d0d0f;
-    color: #f0ede8;
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 24px;
-    overflow: hidden;
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --border: #1e1e2e;
+    --accent: #6ee7b7;
+    --accent2: #38bdf8;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --danger: #f87171;
   }
 
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
   body::before {
     content: '';
     position: fixed;
     inset: 0;
-    background:
-      radial-gradient(ellipse 60% 40% at 30% 20%, rgba(240,192,64,0.08) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 50% at 70% 80%, rgba(224,123,58,0.06) 0%, transparent 60%);
+    background-image:
+      linear-gradient(rgba(110,231,183,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(110,231,183,.03) 1px, transparent 1px);
+    background-size: 48px 48px;
     pointer-events: none;
+    z-index: 0;
+  }
+
+  .glow {
+    position: fixed;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.15;
+  }
+  .glow-1 { background: var(--accent); top: -200px; right: -100px; }
+  .glow-2 { background: var(--accent2); bottom: -200px; left: -100px; }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 56px;
   }
 
   .logo {
-    font-family: 'Playfair Display', serif;
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 48px;
-    opacity: 0;
-    animation: fadeUp 0.6s 0.1s forwards;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -0.5px;
   }
-  .logo span { color: #f0c040; }
+  .logo span { color: var(--accent); }
 
-  .badge {
-    display: inline-flex;
+  .quota-badge {
+    display: flex;
     align-items: center;
     gap: 8px;
-    background: rgba(240,192,64,0.1);
-    border: 1px solid rgba(240,192,64,0.2);
-    border-radius: 40px;
-    padding: 8px 20px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: #f0c040;
-    margin-bottom: 28px;
-    opacity: 0;
-    animation: fadeUp 0.6s 0.2s forwards;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: .8rem;
+    color: var(--muted);
   }
-  .badge::before {
-    content: '';
-    width: 7px; height: 7px;
+  .quota-dot {
+    width: 8px; height: 8px;
     border-radius: 50%;
-    background: #f0c040;
-    animation: pulse 1.5s infinite;
+    background: var(--accent);
   }
+  .quota-dot.warn { background: #fbbf24; }
+  .quota-dot.empty { background: var(--danger); }
 
-  h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(2.2rem, 5vw, 3.8rem);
-    font-weight: 700;
+  /* Hero */
+  .hero {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: fadeUp .6s ease both;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2rem, 5vw, 3.2rem);
     line-height: 1.1;
     letter-spacing: -1px;
-    margin-bottom: 20px;
-    opacity: 0;
-    animation: fadeUp 0.6s 0.3s forwards;
+    margin-bottom: 16px;
   }
-  h1 em { font-style: italic; color: #f0c040; }
-
-  p {
-    font-size: 1rem;
-    color: #888;
-    max-width: 420px;
-    line-height: 1.7;
-    font-weight: 300;
-    margin-bottom: 48px;
-    opacity: 0;
-    animation: fadeUp 0.6s 0.4s forwards;
+  .hero h1 em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero p {
+    color: var(--muted);
+    font-size: 1.05rem;
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.6;
   }
 
-  .notify-form {
-    display: flex;
-    gap: 10px;
-    max-width: 420px;
+  /* Form card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    animation: fadeUp .6s .1s ease both;
+  }
+
+  .field { margin-bottom: 20px; }
+  label {
+    display: block;
+    font-size: .8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  input, textarea, select {
     width: 100%;
-    margin-bottom: 56px;
-    opacity: 0;
-    animation: fadeUp 0.6s 0.5s forwards;
-  }
-
-  .notify-form input {
-    flex: 1;
-    background: #17171a;
-    border: 1px solid rgba(255,255,255,0.07);
+    background: var(--bg);
+    border: 1px solid var(--border);
     border-radius: 10px;
-    padding: 14px 18px;
-    color: #f0ede8;
+    padding: 12px 16px;
+    color: var(--text);
     font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem;
+    font-size: .95rem;
+    transition: border-color .2s;
     outline: none;
-    transition: border-color 0.2s;
+    resize: vertical;
   }
-  .notify-form input:focus {
-    border-color: rgba(240,192,64,0.4);
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
   }
-  .notify-form input::placeholder { color: #444; }
+  select option { background: var(--bg); }
 
-  .notify-form button {
-    background: linear-gradient(135deg, #f0c040, #e07b3a);
-    color: #0d0d0f;
-    border: none;
-    border-radius: 10px;
-    padding: 14px 22px;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 700;
-    font-size: 0.9rem;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: opacity 0.2s;
-  }
-  .notify-form button:hover { opacity: 0.85; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media(max-width:500px){ .row { grid-template-columns: 1fr; } }
 
-  .features {
+  /* Tags */
+  .tags-wrap {
     display: flex;
-    gap: 24px;
     flex-wrap: wrap;
-    justify-content: center;
-    opacity: 0;
-    animation: fadeUp 0.6s 0.6s forwards;
+    gap: 8px;
+    margin-top: 8px;
   }
-
-  .feature {
-    background: #17171a;
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 14px;
-    padding: 20px 24px;
-    text-align: left;
-    width: 180px;
+  .tag {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(110,231,183,.1);
+    border: 1px solid rgba(110,231,183,.25);
+    color: var(--accent);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: .8rem;
+    cursor: pointer;
+    transition: background .2s;
   }
-  .feature-icon { font-size: 1.5rem; margin-bottom: 10px; }
-  .feature-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; }
-  .feature-desc { font-size: 0.78rem; color: #666; line-height: 1.5; }
+  .tag:hover { background: rgba(110,231,183,.2); }
+  .tag .x { font-size: .9rem; opacity: .7; }
 
-  .success-msg {
+  .tag-input-row { display: flex; gap: 8px; }
+  .tag-input-row input { flex: 1; }
+  .add-tag-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--accent);
+    border-radius: 10px;
+    padding: 0 16px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: border-color .2s;
+    white-space: nowrap;
+  }
+  .add-tag-btn:hover { border-color: var(--accent); }
+
+  /* Generate button */
+  .btn-generate {
+    width: 100%;
+    margin-top: 8px;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 12px;
+    color: #0a0a0f;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: .02em;
+    cursor: pointer;
+    transition: opacity .2s, transform .1s;
+  }
+  .btn-generate:hover { opacity: .9; }
+  .btn-generate:active { transform: scale(.99); }
+  .btn-generate:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* Result */
+  .result-card {
+    margin-top: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
     display: none;
-    color: #4caf80;
-    font-size: 0.9rem;
+    animation: fadeUp .4s ease both;
+  }
+  .result-card.visible { display: block; }
+
+  .result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .result-header h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--accent);
+  }
+  .result-actions { display: flex; gap: 8px; }
+  .btn-sm {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: .8rem;
+    cursor: pointer;
+    transition: border-color .2s, color .2s;
+  }
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+
+  .result-text {
+    font-size: .95rem;
+    line-height: 1.75;
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+
+  /* Loading spinner */
+  .spinner {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    padding: 20px;
+    color: var(--muted);
+    font-size: .9rem;
+  }
+  .spinner.visible { display: flex; }
+  .spin {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+
+  /* Paywall overlay */
+  .paywall {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10,10,15,.85);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .paywall.visible { display: flex; }
+
+  .paywall-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 560px;
+    width: 100%;
+    text-align: center;
+    animation: fadeUp .4s ease both;
+  }
+  .paywall-box h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+  }
+  .paywall-box p {
+    color: var(--muted);
+    margin-bottom: 32px;
+    line-height: 1.6;
+  }
+
+  .plans {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  @media(max-width:480px){ .plans { grid-template-columns: 1fr; } }
+
+  .plan {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: left;
+    transition: border-color .2s;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--text);
+    display: block;
+  }
+  .plan:hover { border-color: var(--accent); }
+  .plan.featured { border-color: var(--accent); }
+
+  .plan-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: .9rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: 8px;
+  }
+  .plan-price {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .plan-price span {
+    font-size: .9rem;
+    font-weight: 400;
+    color: var(--muted);
+  }
+  .plan-desc {
+    font-size: .8rem;
+    color: var(--muted);
     margin-top: 12px;
+    line-height: 1.5;
+  }
+
+  .plan-cta {
+    display: block;
+    margin-top: 16px;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: .85rem;
+    font-weight: 600;
+    background: rgba(110,231,183,.1);
+    color: var(--accent);
+    border: 1px solid rgba(110,231,183,.3);
+    transition: background .2s;
+  }
+  .plan:hover .plan-cta { background: rgba(110,231,183,.2); }
+
+  .paywall-close {
+    color: var(--muted);
+    font-size: .85rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+    text-decoration: underline;
+  }
+  .paywall-close:hover { color: var(--text); }
+
+  /* Language selector */
+  .lang-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .lang-pill {
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--muted);
+    font-size: .8rem;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .lang-pill.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(110,231,183,.08);
   }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(16px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
 </style>
 </head>
 <body>
 
-<div class="logo">Fiche<span>AI</span></div>
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
 
-<div class="badge">Lancement imminent</div>
+<div class="wrapper">
 
-<h1>Vos fiches produit,<br><em>en 10 secondes chrono</em></h1>
+  <header>
+    <div class="logo">Fiche<span>AI</span></div>
+    <div class="quota-badge" id="quotaBadge">
+      <div class="quota-dot" id="quotaDot"></div>
+      <span id="quotaText">3 fiches gratuites</span>
+    </div>
+  </header>
 
-<p>L'outil IA qui rédige vos fiches produit optimisées SEO pour Shopify, Etsy et Amazon. Soyez notifié dès l'ouverture.</p>
+  <div class="hero">
+    <h1>Des fiches produit qui <em>convertissent</em></h1>
+    <p>Décris ton produit en quelques mots. L'IA rédige une fiche professionnelle en secondes, dans la langue de ton choix.</p>
+  </div>
 
-<div class="notify-form">
-  <input type="email" id="email-input" placeholder="votre@email.com" />
-  <button onclick="handleNotify()">Me notifier</button>
+  <div class="card">
+    <div class="field">
+      <label>Nom du produit</label>
+      <input type="text" id="productName" placeholder="ex: Sac à dos cuir vintage 30L" />
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>Catégorie</label>
+        <select id="category">
+          <option value="">Sélectionner...</option>
+          <option>Mode & Accessoires</option>
+          <option>Maison & Déco</option>
+          <option>Électronique</option>
+          <option>Beauté & Cosmétiques</option>
+          <option>Sport & Fitness</option>
+          <option>Alimentation</option>
+          <option>Jouets & Enfants</option>
+          <option>Bijoux</option>
+          <option>Art & Artisanat</option>
+          <option>Autre</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Ton / Style</label>
+        <select id="tone">
+          <option value="professionnel">Professionnel</option>
+          <option value="luxe">Luxe & Premium</option>
+          <option value="jeune">Jeune & Dynamique</option>
+          <option value="minimaliste">Minimaliste</option>
+          <option value="storytelling">Storytelling</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Caractéristiques clés</label>
+      <div class="tag-input-row">
+        <input type="text" id="tagInput" placeholder="ex: imperméable, 15 poches..." />
+        <button class="add-tag-btn" onclick="addTag()">+</button>
+      </div>
+      <div class="tags-wrap" id="tagsWrap"></div>
+    </div>
+
+    <div class="field">
+      <label>Langue de sortie</label>
+      <div class="lang-pills">
+        <div class="lang-pill active" data-lang="fr" onclick="setLang(this)">🇫🇷 Français</div>
+        <div class="lang-pill" data-lang="en" onclick="setLang(this)">🇬🇧 English</div>
+        <div class="lang-pill" data-lang="es" onclick="setLang(this)">🇪🇸 Español</div>
+        <div class="lang-pill" data-lang="de" onclick="setLang(this)">🇩🇪 Deutsch</div>
+        <div class="lang-pill" data-lang="it" onclick="setLang(this)">🇮🇹 Italiano</div>
+      </div>
+    </div>
+
+    <button class="btn-generate" id="generateBtn" onclick="generate()">
+      ✦ Générer la fiche produit
+    </button>
+  </div>
+
+  <div class="spinner" id="spinner">
+    <div class="spin"></div>
+    Génération en cours...
+  </div>
+
+  <div class="result-card" id="resultCard">
+    <div class="result-header">
+      <h3>✦ Fiche générée</h3>
+      <div class="result-actions">
+        <button class="btn-sm" onclick="copyResult()">Copier</button>
+        <button class="btn-sm" onclick="downloadResult()">Télécharger</button>
+      </div>
+    </div>
+    <div class="result-text" id="resultText"></div>
+  </div>
+
 </div>
 
-<p class="success-msg" id="success-msg">✓ Parfait ! On vous prévient dès l'ouverture.</p>
+<!-- Paywall -->
+<div class="paywall" id="paywall">
+  <div class="paywall-box">
+    <h2>Continue à scaler 🚀</h2>
+    <p>Tu as utilisé tes 3 fiches gratuites.<br>Choisis un plan pour générer sans limite.</p>
 
-<div class="features">
-  <div class="feature">
-    <div class="feature-icon">⚡</div>
-    <div class="feature-title">10 secondes</div>
-    <div class="feature-desc">Fiche complète générée instantanément</div>
-  </div>
-  <div class="feature">
-    <div class="feature-icon">🎯</div>
-    <div class="feature-title">SEO inclus</div>
-    <div class="feature-desc">Mots-clés optimisés pour Google</div>
-  </div>
-  <div class="feature">
-    <div class="feature-icon">✨</div>
-    <div class="feature-title">3 fiches offertes</div>
-    <div class="feature-desc">Sans carte bancaire requise</div>
+    <div class="plans">
+      <a href="https://buy.stripe.com/test_14AeV6edGeRX7J83MUfEk00" target="_blank" class="plan">
+        <div class="plan-name">Starter</div>
+        <div class="plan-price">7€<span>/mois</span></div>
+        <div class="plan-desc">30 fiches produit · 3 langues · Export texte</div>
+        <div class="plan-cta">Commencer →</div>
+      </a>
+      <a href="https://buy.stripe.com/test_fZufZa0mQ39f3sSabifEk01" target="_blank" class="plan featured">
+        <div class="plan-name">⭐ Pro</div>
+        <div class="plan-price">19€<span>/mois</span></div>
+        <div class="plan-desc">Fiches illimitées · Toutes langues · Export CSV · Support prioritaire</div>
+        <div class="plan-cta">Choisir Pro →</div>
+      </a>
+    </div>
+
+    <button class="paywall-close" onclick="closePaywall()">Pas maintenant</button>
   </div>
 </div>
 
 <script>
-function handleNotify() {
-  const email = document.getElementById('email-input').value;
-  if (!email || !email.includes('@')) {
-    document.getElementById('email-input').focus();
-    return;
-  }
-  document.querySelector('.notify-form').style.display = 'none';
-  document.getElementById('success-msg').style.display = 'block';
-}
-</script>
+  let tags = [];
+  let selectedLang = 'fr';
+  const QUOTA_KEY = 'ficheai_quota';
+  const MAX_FREE = 3;
 
+  function getQuota() {
+    return parseInt(localStorage.getItem(QUOTA_KEY) || '0');
+  }
+  function incrementQuota() {
+    const q = getQuota() + 1;
+    localStorage.setItem(QUOTA_KEY, q);
+    return q;
+  }
+  function updateQuotaUI() {
+    const used = getQuota();
+    const remaining = MAX_FREE - used;
+    const dot = document.getElementById('quotaDot');
+    const text = document.getElementById('quotaText');
+    if (remaining <= 0) {
+      dot.className = 'quota-dot empty';
+      text.textContent = 'Quota épuisé';
+    } else if (remaining === 1) {
+      dot.className = 'quota-dot warn';
+      text.textContent = `${remaining} fiche restante`;
+    } else {
+      dot.className = 'quota-dot';
+      text.textContent = `${remaining} fiches gratuites`;
+    }
+  }
+
+  function addTag() {
+    const input = document.getElementById('tagInput');
+    const val = input.value.trim();
+    if (!val || tags.includes(val)) { input.value = ''; return; }
+    tags.push(val);
+    renderTags();
+    input.value = '';
+  }
+
+  function removeTag(t) {
+    tags = tags.filter(x => x !== t);
+    renderTags();
+  }
+
+  function renderTags() {
+    const wrap = document.getElementById('tagsWrap');
+    wrap.innerHTML = tags.map(t =>
+      `<div class="tag" onclick="removeTag('${t}')">${t} <span class="x">×</span></div>`
+    ).join('');
+  }
+
+  document.getElementById('tagInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addTag(); }
+  });
+
+  function setLang(el) {
+    document.querySelectorAll('.lang-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    selectedLang = el.dataset.lang;
+  }
+
+  async function generate() {
+    const name = document.getElementById('productName').value.trim();
+    const category = document.getElementById('category').value;
+    const tone = document.getElementById('tone').value;
+
+    if (!name) { alert('Entre le nom du produit !'); return; }
+
+    if (getQuota() >= MAX_FREE) { showPaywall(); return; }
+
+    const langNames = { fr: 'français', en: 'English', es: 'español', de: 'Deutsch', it: 'italiano' };
+    const prompt = `Génère une fiche produit e-commerce complète en ${langNames[selectedLang]} pour :
+- Produit : ${name}
+- Catégorie : ${category || 'Non spécifiée'}
+- Caractéristiques : ${tags.length ? tags.join(', ') : 'Non spécifiées'}
+- Ton : ${tone}
+
+Inclure : titre accrocheur, description courte (2 lignes), description longue (storytelling + bénéfices), points forts (bullet points), et une phrase d'appel à l'action. Optimisé SEO.`;
+
+    document.getElementById('generateBtn').disabled = true;
+    document.getElementById('spinner').classList.add('visible');
+    document.getElementById('resultCard').classList.remove('visible');
+
+    try {
+      const res = await fetch('/.netlify/functions/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+      const data = await res.json();
+
+      if (data.result) {
+        document.getElementById('resultText').textContent = data.result;
+        document.getElementById('resultCard').classList.add('visible');
+        const used = incrementQuota();
+        updateQuotaUI();
+        if (used >= MAX_FREE) {
+          setTimeout(showPaywall, 1500);
+        }
+      } else {
+        alert('Erreur : ' + (data.error || 'Réponse vide'));
+      }
+    } catch (err) {
+      alert('Erreur de connexion. Réessaie.');
+    } finally {
+      document.getElementById('generateBtn').disabled = false;
+      document.getElementById('spinner').classList.remove('visible');
+    }
+  }
+
+  function copyResult() {
+    const text = document.getElementById('resultText').textContent;
+    navigator.clipboard.writeText(text).then(() => alert('Copié !'));
+  }
+
+  function downloadResult() {
+    const text = document.getElementById('resultText').textContent;
+    const name = document.getElementById('productName').value.trim() || 'fiche';
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url;
+    a.download = `fiche-${name}.txt`;
+    a.click();
+  }
+
+  function showPaywall() { document.getElementById('paywall').classList.add('visible'); }
+  function closePaywall() { document.getElementById('paywall').classList.remove('visible'); }
+
+  updateQuotaUI();
+</script>
 </body>
 </html>
